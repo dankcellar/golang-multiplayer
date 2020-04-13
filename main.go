@@ -18,7 +18,7 @@ func servePublic(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	http.FileServer(http.Dir("./public"))
+	http.FileServer(http.Dir("/public"))
 }
 
 func main() {
