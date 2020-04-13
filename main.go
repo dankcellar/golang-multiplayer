@@ -4,9 +4,10 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"os"
 )
 
-var addr = flag.String("addr", "127.0.0.1:8080", "http service address")
+// var addr = flag.String("addr", "127.0.0.1:8080", "http service address")
 
 func servePublic(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.URL)
@@ -29,7 +30,13 @@ func main() {
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		serveWs(hub, w, r)
 	})
-	err := http.ListenAndServe(*addr, nil)
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+		log.Printf("Defaulting to port %s", port)
+	}
+	err := http.ListenAndServe(":"+port, nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
