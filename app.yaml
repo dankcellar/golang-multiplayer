@@ -1,4 +1,4 @@
-runtime: go112  # or go113 for Go 1.13 runtime (beta)
+runtime: go  # or go113 for Go 1.13 runtime (beta)
 
 # handlers:
 #   - url: /.*
