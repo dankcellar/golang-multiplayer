@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"log"
 	"net/http"
 	"os"
@@ -23,10 +22,10 @@ import (
 // }
 
 func main() {
-	flag.Parse()
+	// flag.Parse()
 	hub := newHub()
 	go hub.run()
-	http.Handle("/", http.FileServer(http.Dir("/public")))
+	http.Handle("/", http.FileServer(http.Dir("public")))
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		serveWs(hub, w, r)
 	})
