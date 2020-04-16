@@ -1,6 +1,7 @@
-runtime: go112 # or go113 for Go 1.13 runtime (beta)
+runtime: go112  # or go113 for Go 1.13 runtime (beta)
 
 handlers:
-  - url: /.*
-    script: _go_app
+    - url: /.*
     secure: always
+    redirect_http_response_code: 301
+    script: auto
