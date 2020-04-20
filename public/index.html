@@ -211,7 +211,7 @@ limitations under the License.
           const player = JSON.parse(text);
           $("#messages").append(
             `<li> <strong>${label}</strong>: ${
-              player ? player.username : "Unknown"
+              player ? player.username : player
             }`
           );
         }
