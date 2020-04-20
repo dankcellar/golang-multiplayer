@@ -215,16 +215,16 @@ limitations under the License.
         /* Establish the WebSocket connection and register event handlers. */
         var websocket = new WebSocket(webSocketUri);
         websocket.onopen = function () {
-          log("Connected");
+          log(JSON.stringify("Connected"));
         };
         websocket.onclose = function () {
-          log("Closed");
+          log(JSON.stringify("Closed"));
         };
         websocket.onmessage = function (e) {
-          log(e.data, "Message received");
+          log(JSON.stringify(e.data), "Message");
         };
         websocket.onerror = function (e) {
-          log("Error (see console)");
+          log(JSON.stringify("Error (see console)"));
           console.log(e);
         };
         /* Handle form submission and send a message to the websocket. */
