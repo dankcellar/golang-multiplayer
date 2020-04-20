@@ -208,23 +208,27 @@ limitations under the License.
         /* Helper to keep an activity log on the page. */
         function log(text, label) {
           label = label || "Status";
-          const data = JSON.parse(text)
-          $("#messages").append(`<li> <strong>${label}</strong>: ${data.username}`);
+          const player = JSON.parse(text);
+          $("#messages").append(
+            `<li> <strong>${label}</strong>: ${
+              player ? player.username : "Unknown"
+            }`
+          );
         }
 
         /* Establish the WebSocket connection and register event handlers. */
         var websocket = new WebSocket(webSocketUri);
         websocket.onopen = function () {
-          log(JSON.stringify("Connected"));
+          log(null, "Connected");
         };
         websocket.onclose = function () {
-          log(JSON.stringify("Closed"));
+          log(null, "Closed");
         };
         websocket.onmessage = function (e) {
-          log(JSON.stringify(e.data), "Message");
+          log(e.data, "Message received");
         };
         websocket.onerror = function (e) {
-          log(JSON.stringify("Error (see console)"));
+          log(null, "Error (see console)");
           console.log(e);
         };
         /* Handle form submission and send a message to the websocket. */
@@ -232,8 +236,7 @@ limitations under the License.
           e.preventDefault();
           var data = $("#chat-text").val();
           if (data) {
-            const json = JSON.stringify(data);
-            websocket.send(json);
+            websocket.send(data);
             window.scrollTo(0, document.body.scrollHeight);
             $("#chat-text").val("");
           }
