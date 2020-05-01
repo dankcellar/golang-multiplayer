@@ -105,14 +105,28 @@ limitations under the License.
 
         /* Helper to keep an activity log on the page. */
         function log(text, label) {
+          label = label || "Status";
           console.log(text);
-          label = label || "Status";          
-          const player = JSON.parse(text);
-          $("#messages").append(
-            `<li> <strong>${label}</strong>: ${
-              player ? player.token : player
-            }`
-          );
+          if (
+            /^[\],:{}\s]*$/.test(
+              text
+                .replace(/\\["\\\/bfnrtu]/g, "@")
+                .replace(
+                  /"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,
+                  "]"
+                )
+                .replace(/(?:^|:|,)(?:\s*\[)+/g, "")
+            )
+          ) {
+            const player = JSON.parse(text);
+            $("#messages").append(
+              `<li> <strong>${label}</strong>: ${
+                player ? player.token : player
+              }`
+            );
+          } else {
+            $("#messages").append(`<li> <strong>${label}</strong>: ${text}`);
+          }
         }
 
         /* Establish the WebSocket connection and register event handlers. */
