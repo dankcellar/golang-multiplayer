@@ -107,7 +107,9 @@ limitations under the License.
         function log(text, label) {
           label = label || "Status";
           console.log(text);
-          if (
+          if (!text) {
+            $("#messages").append(`<li> <strong>${label}</strong>: ${text}`);
+          } else if (
             /^[\],:{}\s]*$/.test(
               text
                 .replace(/\\["\\\/bfnrtu]/g, "@")
@@ -120,9 +122,7 @@ limitations under the License.
           ) {
             const player = JSON.parse(text);
             $("#messages").append(
-              `<li> <strong>${label}</strong>: ${
-                player ? player.Token : text
-              }`
+              `<li> <strong>${label}</strong>: ${player ? player.Token : text}`
             );
           } else {
             $("#messages").append(`<li> <strong>${label}</strong>: ${text}`);
