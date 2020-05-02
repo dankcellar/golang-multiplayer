@@ -30,7 +30,7 @@ func main() {
 	hub := newHub()
 	go hub.run()
 
-	http.HandleFunc("/", serveHome)
+	http.Handle("/", http.FileServer(http.Dir("public")))
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		serveWs(hub, w, r)
 	})
@@ -40,7 +40,9 @@ func main() {
 		port = "8080"
 	}
 
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
+	log.Printf("Listening on port %s", port)
+	err := http.ListenAndServe(":"+port, nil)
+	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
 }
