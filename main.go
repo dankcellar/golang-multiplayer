@@ -1,45 +1,40 @@
+// Copyright 2013 The Gorilla WebSocket Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
-	"os"
 )
 
-// var addr = flag.String("addr", "127.0.0.1:8080", "http service address")
+var addr = flag.String("addr", ":8080", "http service address")
 
-// func servePublic(w http.ResponseWriter, r *http.Request) {
-// 	log.Println(r.URL)
-// 	if r.URL.Path != "/" {
-// 		http.Error(w, "Not found", http.StatusNotFound)
-// 		return
-// 	}
-// 	if r.Method != "GET" {
-// 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-// 		return
-// 	}
-// 	http.FileServer(http.Dir("./public"))
-// }
+func serveHome(w http.ResponseWriter, r *http.Request) {
+	log.Println(r.URL)
+	if r.URL.Path != "/" {
+		http.Error(w, "Not found", http.StatusNotFound)
+		return
+	}
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	http.ServeFile(w, r, "home.html")
+}
 
 func main() {
-	// flag.Parse()
+	flag.Parse()
 	hub := newHub()
 	go hub.run()
-	http.Handle("/", http.FileServer(http.Dir("public")))
+	http.HandleFunc("/", serveHome)
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		serveWs(hub, w, r)
 	})
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-	log.Printf("Listening on port %s", port)
-	err := http.ListenAndServe(":"+port, nil)
+	err := http.ListenAndServe(*addr, nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
-	// if err := http.ListenAndServe(":"+port, nil); err != nil {
-	// 	log.Fatal("ListenAndServe: ", err)
-	// }
 }
