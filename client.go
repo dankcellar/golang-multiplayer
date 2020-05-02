@@ -80,9 +80,9 @@ func (c *Client) readPump() {
 // application ensures that there is at most one writer to a connection by
 // executing all writes from this goroutine.
 func (c *Client) writePump() {
-	ticker := time.NewTicker(pingPeriod)
+	// ticker := time.NewTicker(pingPeriod)
 	defer func() {
-		ticker.Stop()
+		// ticker.Stop()
 		c.conn.Close()
 	}()
 	for {
