@@ -135,7 +135,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request, roomID string) {
 		return
 	}
 	// client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
-	c := &Client{send: make(chan []byte, 256), conn: conn}
+	c := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
 	s := Subscription{c, roomID}
 	c.hub.register <- s
 
