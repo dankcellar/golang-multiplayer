@@ -96,12 +96,15 @@ limitations under the License.
         /* If the main page is served via https, the WebSocket must be served via
          "wss" (WebSocket Secure) */
         var scheme = window.location.protocol == "https:" ? "wss://" : "ws://";
+        var params = window.location.href.split("/");
+        var roomId = params[params.length - 1];
         var webSocketUri =
           scheme +
           window.location.hostname +
           (location.port ? ":" + location.port : "") +
           // + '127.0.0.1:8080'
-          "/ws";
+          "/ws/" +
+          roomId;
 
         /* Helper to keep an activity log on the page. */
         function log(text, label) {
