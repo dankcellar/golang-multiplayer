@@ -5,7 +5,6 @@
 package main
 
 import (
-	"bytes"
 	"log"
 	"net/http"
 
@@ -71,7 +70,7 @@ func (s Subscription) readPump() {
 			}
 			break
 		}
-		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
+		// message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 		m := Message{message, s.room}
 		s.client.hub.broadcast <- m
 	}
