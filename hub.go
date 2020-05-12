@@ -96,6 +96,9 @@ func (h *Hub) run() {
 			for c := range connections {
 				select {
 				case c.send <- m.data:
+					if len(connections) == 1 {
+						c.send <- []byte(`isServer`)
+					}
 				default:
 					close(c.send)
 					delete(connections, c)
