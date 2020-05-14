@@ -1,15 +1,15 @@
-// Copyright 2013 The Gorilla WebSocket Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
 package main
 
 import (
 	"log"
 	"net/http"
 
+	guuid "github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	jsoniter "github.com/json-iterator/go"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // const (
 // 	// Time allowed to write a message to the peer.
@@ -25,11 +25,10 @@ import (
 // 	maxMessageSize = 512
 // )
 
-var (
-	newline = []byte{'\n'}
-	space   = []byte{' '}
-	// spliter = []byte{'|'}
-)
+// var (
+// 	newline = []byte{'\n'}
+// 	space   = []byte{' '}
+// )
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -45,6 +44,8 @@ type Client struct {
 
 	// Buffered channel of outbound messages.
 	send chan []byte
+
+	token string
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -54,7 +55,6 @@ type Client struct {
 // reads from this goroutine.
 // func (c *Client) readPump() {
 func (s Subscription) readPump() {
-	// c := s.client
 	defer func() {
 		s.client.hub.unregister <- s
 		s.client.conn.Close()
@@ -70,8 +70,12 @@ func (s Subscription) readPump() {
 			}
 			break
 		}
+
+		token := Token{}
+		json.Unmarshal(message, &token)
+
 		// message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		m := Message{message, s.room}
+		m := Message{message, s.room, s.client.token, token.Token}
 		s.client.hub.broadcast <- m
 	}
 }
@@ -111,7 +115,7 @@ func (s Subscription) writePump() {
 			// Add queued chat messages to the current websocket message.
 			// n := len(s.client.send)
 			// for i := 0; i < n; i++ {
-			// 	w.Write(spliter)
+			// 	w.Write(space)
 			// 	w.Write(<-s.client.send)
 			// }
 
@@ -134,13 +138,13 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request, roomID string) {
 		log.Println(err)
 		return
 	}
-	// client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
-	c := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
+
+	token := guuid.New().String()
+	c := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), token: token}
 	s := Subscription{c, roomID}
 	c.hub.register <- s
 
-	// Allow collection of memory referenced by the caller by doing all work in
-	// new goroutines.
+	// Allow collection of memory referenced by the caller by doing all work in new goroutines.
 	go s.writePump()
 	go s.readPump()
 }
