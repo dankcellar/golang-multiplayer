@@ -12,25 +12,16 @@ type Subscription struct {
 	room   string
 }
 
-type Token struct {
-	Token    string
-	Dest     string
-	Username string
-	IsServer bool
+type ServerMessage struct {
+	Token    string `json:"Token"`
+	IsServer bool   `json:"IsServer"`
+	Username string `json:"Username"`
 }
 
-// Hub maintains the set of active clients and broadcasts messages to the clients
 type Hub struct {
-	// Registered clients.
-	rooms map[string]map[*Client]bool
-
-	// Inbound messages from the clients.
-	broadcast chan Message
-
-	// Register requests from the clients.
-	register chan Subscription
-
-	// Unregister requests from clients.
+	rooms      map[string]map[*Client]bool
+	broadcast  chan Message
+	register   chan Subscription
 	unregister chan Subscription
 }
 
@@ -56,11 +47,12 @@ func (h *Hub) run() {
 			}
 			h.rooms[s.room][s.client] = true
 
-			// Init client with reply token and isServer
-			message := Token{
+			s.client.isServer = isServer
+			s.client.username = "PLACEHOLDER" // TODO: Get username from database
+			message := ServerMessage{
 				Token:    s.client.token,
-				Username: "PLACEHOLDER",
-				IsServer: isServer,
+				Username: s.client.username,
+				IsServer: s.client.isServer,
 			}
 			bytes, _ := json.Marshal(&message)
 			s.client.send <- bytes
@@ -97,7 +89,7 @@ func (h *Hub) run() {
 						delete(h.rooms, m.room)
 					}
 				} else {
-					if m.token != c.token || m.dest == c.token {
+					if (m.dest == c.token) || (m.dest == "" && m.token != c.token) {
 						c.send <- m.data
 					}
 				}

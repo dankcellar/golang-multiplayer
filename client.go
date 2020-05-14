@@ -37,15 +37,17 @@ var upgrader = websocket.Upgrader{
 
 // Client is a middleman between the websocket connection and the hub.
 type Client struct {
-	hub *Hub
+	hub      *Hub
+	conn     *websocket.Conn
+	send     chan []byte
+	token    string
+	isServer bool
+	username string
+}
 
-	// The websocket connection.
-	conn *websocket.Conn
-
-	// Buffered channel of outbound messages.
-	send chan []byte
-
-	token string
+// ClientMessage - incoming messages
+type ClientMessage struct {
+	Dest string `json:"Dest"`
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -53,7 +55,6 @@ type Client struct {
 // The application runs readPump in a per-connection goroutine. The application
 // ensures that there is at most one reader on a connection by executing all
 // reads from this goroutine.
-// func (c *Client) readPump() {
 func (s Subscription) readPump() {
 	defer func() {
 		s.client.hub.unregister <- s
@@ -71,11 +72,11 @@ func (s Subscription) readPump() {
 			break
 		}
 
-		token := Token{}
-		json.Unmarshal(message, &token)
+		client := ClientMessage{}
+		json.Unmarshal(message, &client)
 
 		// message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		m := Message{message, s.room, s.client.token, token.Dest}
+		m := Message{message, s.room, s.client.token, client.Dest}
 		s.client.hub.broadcast <- m
 	}
 }
@@ -85,7 +86,6 @@ func (s Subscription) readPump() {
 // A goroutine running writePump is started for each connection. The
 // application ensures that there is at most one writer to a connection by
 // executing all writes from this goroutine.
-// func (c *Client) writePump() {
 func (s Subscription) writePump() {
 	// ticker := time.NewTicker(pingPeriod)
 	defer func() {
