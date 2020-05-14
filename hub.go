@@ -14,6 +14,7 @@ type Subscription struct {
 
 type Token struct {
 	Token    string
+	Dest     string
 	Username string
 	IsServer bool
 }

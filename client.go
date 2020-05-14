@@ -75,7 +75,7 @@ func (s Subscription) readPump() {
 		json.Unmarshal(message, &token)
 
 		// message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		m := Message{message, s.room, s.client.token, token.Token}
+		m := Message{message, s.room, s.client.token, token.Dest}
 		s.client.hub.broadcast <- m
 	}
 }
