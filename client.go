@@ -41,13 +41,24 @@ type Client struct {
 	conn     *websocket.Conn
 	send     chan []byte
 	token    string
-	isServer bool
 	username string
+	isServer bool
 }
 
-// ClientMessage - incoming messages
+// ClientMessage takes incoming json
 type ClientMessage struct {
-	Dest string `json:"Dest"`
+	Dest     string  `json:"Dest"`
+	Token    string  `json:"Token"`
+	Username string  `json:"Username"`
+	IsServer bool    `json:"IsServer"`
+	X        float32 `json:"X,omitempty"`
+	Y        float32 `json:"Y,omitempty"`
+	Z        float32 `json:"Z,omitempty"`
+	RX       float32 `json:"RX,omitempty"`
+	RY       float32 `json:"RY,omitempty"`
+	RZ       float32 `json:"RZ,omitempty"`
+	IsP2P    bool    `json:"IsP2P,omitempty"`
+	Data     []byte  `json:"Data,omitempty"`
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -74,9 +85,12 @@ func (s Subscription) readPump() {
 
 		cm := ClientMessage{}
 		json.Unmarshal(message, &cm)
+		cm.Token = s.client.token
+		cm.Username = s.client.username
+		cm.IsServer = s.client.isServer
 
-		// message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		m := Message{message, s.room, s.client.token, cm.Dest}
+		bytes, _ := json.Marshal(&cm)
+		m := Message{bytes, s.room, s.client.token, cm.Dest}
 		s.client.hub.broadcast <- m
 	}
 }
