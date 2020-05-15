@@ -51,12 +51,12 @@ type ClientMessage struct {
 	Token    string  `json:"Token"`
 	Username string  `json:"Username"`
 	IsServer bool    `json:"IsServer"`
-	X        float32 `json:"X,omitempty"`
-	Y        float32 `json:"Y,omitempty"`
-	Z        float32 `json:"Z,omitempty"`
-	RX       float32 `json:"RX,omitempty"`
-	RY       float32 `json:"RY,omitempty"`
-	RZ       float32 `json:"RZ,omitempty"`
+	PosX     float32 `json:"PosX,omitempty"`
+	PosY     float32 `json:"PosY,omitempty"`
+	PosZ     float32 `json:"PosZ,omitempty"`
+	RotX     float32 `json:"RotX,omitempty"`
+	RotY     float32 `json:"RotY,omitempty"`
+	RotZ     float32 `json:"RotZ,omitempty"`
 	IsP2P    bool    `json:"IsP2P,omitempty"`
 	Data     []byte  `json:"Data,omitempty"`
 }
