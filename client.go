@@ -47,6 +47,7 @@ type Client struct {
 
 // ClientMessage takes incoming json
 type ClientMessage struct {
+	Type     string  `json:"Type"`
 	Dest     string  `json:"Dest"`
 	Token    string  `json:"Token"`
 	Username string  `json:"Username"`
