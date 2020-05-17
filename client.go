@@ -1,15 +1,15 @@
-// Copyright 2013 The Gorilla WebSocket Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
 package main
 
 import (
 	"log"
 	"net/http"
 
+	guuid "github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	jsoniter "github.com/json-iterator/go"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // const (
 // 	// Time allowed to write a message to the peer.
@@ -25,11 +25,10 @@ import (
 // 	maxMessageSize = 512
 // )
 
-var (
-	newline = []byte{'\n'}
-	space   = []byte{' '}
-	// spliter = []byte{'|'}
-)
+// var (
+// 	newline = []byte{'\n'}
+// 	space   = []byte{' '}
+// )
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -38,13 +37,29 @@ var upgrader = websocket.Upgrader{
 
 // Client is a middleman between the websocket connection and the hub.
 type Client struct {
-	hub *Hub
+	hub      *Hub
+	conn     *websocket.Conn
+	send     chan []byte
+	token    string
+	username string
+	isServer bool
+}
 
-	// The websocket connection.
-	conn *websocket.Conn
-
-	// Buffered channel of outbound messages.
-	send chan []byte
+// ClientMessage takes incoming json
+type ClientMessage struct {
+	Type     string  `json:"Type"`
+	Dest     string  `json:"Dest"`
+	Token    string  `json:"Token"`
+	Username string  `json:"Username"`
+	IsServer bool    `json:"IsServer"`
+	PosX     float32 `json:"PosX,omitempty"`
+	PosY     float32 `json:"PosY,omitempty"`
+	PosZ     float32 `json:"PosZ,omitempty"`
+	RotX     float32 `json:"RotX,omitempty"`
+	RotY     float32 `json:"RotY,omitempty"`
+	RotZ     float32 `json:"RotZ,omitempty"`
+	IsP2P    bool    `json:"IsP2P,omitempty"`
+	Data     []byte  `json:"Data,omitempty"`
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -52,9 +67,7 @@ type Client struct {
 // The application runs readPump in a per-connection goroutine. The application
 // ensures that there is at most one reader on a connection by executing all
 // reads from this goroutine.
-// func (c *Client) readPump() {
 func (s Subscription) readPump() {
-	// c := s.client
 	defer func() {
 		s.client.hub.unregister <- s
 		s.client.conn.Close()
@@ -70,8 +83,15 @@ func (s Subscription) readPump() {
 			}
 			break
 		}
-		// message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		m := Message{message, s.room}
+
+		cm := ClientMessage{}
+		json.Unmarshal(message, &cm)
+		cm.Token = s.client.token
+		cm.Username = s.client.username
+		cm.IsServer = s.client.isServer
+
+		bytes, _ := json.Marshal(&cm)
+		m := Message{bytes, s.room, s.client.token, cm.Dest}
 		s.client.hub.broadcast <- m
 	}
 }
@@ -81,7 +101,6 @@ func (s Subscription) readPump() {
 // A goroutine running writePump is started for each connection. The
 // application ensures that there is at most one writer to a connection by
 // executing all writes from this goroutine.
-// func (c *Client) writePump() {
 func (s Subscription) writePump() {
 	// ticker := time.NewTicker(pingPeriod)
 	defer func() {
@@ -111,7 +130,7 @@ func (s Subscription) writePump() {
 			// Add queued chat messages to the current websocket message.
 			// n := len(s.client.send)
 			// for i := 0; i < n; i++ {
-			// 	w.Write(spliter)
+			// 	w.Write(space)
 			// 	w.Write(<-s.client.send)
 			// }
 
@@ -134,13 +153,13 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request, roomID string) {
 		log.Println(err)
 		return
 	}
-	// client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
-	c := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
+
+	token := guuid.New().String()
+	c := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), token: token}
 	s := Subscription{c, roomID}
 	c.hub.register <- s
 
-	// Allow collection of memory referenced by the caller by doing all work in
-	// new goroutines.
+	// Allow collection of memory referenced by the caller by doing all work in new goroutines.
 	go s.writePump()
 	go s.readPump()
 }
