@@ -89,8 +89,7 @@ func (h *Hub) run() {
 						delete(h.rooms, m.room)
 					}
 				} else {
-					// if (m.dest == c.token) || (m.dest == "" && m.token != c.token) || (c.isServer && m.token == c.token) {
-					if (m.dest == c.token) || (m.dest == "" && m.token != c.token) {
+					if (m.dest == c.token) || (m.dest == "" && m.token != c.token) || (c.isServer && m.token == c.token) {
 						c.send <- m.data
 					}
 				}
