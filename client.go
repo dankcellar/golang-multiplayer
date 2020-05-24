@@ -63,7 +63,7 @@ type ClientMessage struct {
 	IsP2P bool   `json:"IsP2P,omitempty"`
 	Data  []byte `json:"Data,omitempty"`
 	// GameState Packets
-	GameState string `json:"GameState,omitempty"`
+	Crates string `json:"Crates,omitempty"`
 }
 
 // readPump pumps messages from the websocket connection to the hub.
