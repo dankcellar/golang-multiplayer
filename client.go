@@ -65,7 +65,7 @@ type ClientMessage struct {
 	// GameState Packets
 	Crates      string `json:"Crates,omitempty"`
 	Action      int32  `json:"Action,omitempty"`
-	ActionCrate string `json:"Action,omitempty"`
+	ActionCrate string `json:"ActionCrate,omitempty"`
 }
 
 // readPump pumps messages from the websocket connection to the hub.
