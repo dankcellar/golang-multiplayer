@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 
-	guuid "github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	jsoniter "github.com/json-iterator/go"
 )
@@ -153,15 +152,15 @@ func (s Subscription) writePump() {
 }
 
 // serveWs handles websocket requests from the peer.
-func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request, roomID string) {
+func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request, roomID string, userToken string) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	token := guuid.New().String()
-	c := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), token: token}
+	// token := guuid.New().String()
+	c := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), token: userToken}
 	s := Subscription{c, roomID}
 	c.hub.register <- s
 
