@@ -1,16 +1,14 @@
 package main
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/hex"
 	"os"
 
 	"github.com/gin-gonic/gin"
+	guuid "github.com/google/uuid"
 )
 
 func main() {
-	secret := "m9kaxFePwArUwRs53qaOsSoFP6bjpFD6"
+	// secret := "m9kaxFePwArUwRs53qaOsSoFP6bjpFD6"
 	hub := newHub()
 	go hub.run()
 
@@ -23,10 +21,11 @@ func main() {
 
 	router.GET("/ws/:roomID", func(c *gin.Context) {
 		roomID := c.Param("roomID")
-		ipAdds := c.ClientIP()
-		h := hmac.New(sha256.New, []byte(secret))
-		h.Write([]byte(ipAdds))
-		userToken := hex.EncodeToString(h.Sum(nil))
+		// ipAdds := c.ClientIP()
+		// h := hmac.New(sha256.New, []byte(secret))
+		// h.Write([]byte(ipAdds))
+		// userToken := hex.EncodeToString(h.Sum(nil))
+		userToken := guuid.New().String()
 
 		serveWs(hub, c.Writer, c.Request, roomID, userToken)
 	})
