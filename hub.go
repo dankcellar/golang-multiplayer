@@ -15,7 +15,7 @@ type Subscription struct {
 type ServerMessage struct {
 	Token    string `json:"Token"`
 	IsServer bool   `json:"IsServer"`
-	Username string `json:"Username"`
+	// Username string `json:"Username"`
 }
 
 type Hub struct {
@@ -48,10 +48,10 @@ func (h *Hub) run() {
 			h.rooms[s.room][s.client] = true
 
 			s.client.isServer = isServer
-			s.client.username = "PLACEHOLDER" // TODO: Get username from database
+			// s.client.username = "PLACEHOLDER" // TODO: Get username from database
 			message := ServerMessage{
-				Token:    s.client.token,
-				Username: s.client.username,
+				Token: s.client.token,
+				// Username: s.client.username,
 				IsServer: s.client.isServer,
 			}
 			bytes, _ := json.Marshal(&message)

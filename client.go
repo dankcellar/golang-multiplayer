@@ -36,11 +36,11 @@ var upgrader = websocket.Upgrader{
 
 // Client is a middleman between the websocket connection and the hub.
 type Client struct {
-	hub      *Hub
-	conn     *websocket.Conn
-	send     chan []byte
-	token    string
-	username string
+	hub   *Hub
+	conn  *websocket.Conn
+	send  chan []byte
+	token string
+	// username string
 	isServer bool
 }
 
@@ -49,15 +49,15 @@ type ClientMessage struct {
 	Type     int32  `json:"Type"`
 	Dest     string `json:"Dest"`
 	Token    string `json:"Token"`
-	Username string `json:"Username"`
 	IsServer bool   `json:"IsServer"`
 	// Player Packets
-	PosX float32 `json:"PosX,omitempty"`
-	PosY float32 `json:"PosY,omitempty"`
-	PosZ float32 `json:"PosZ,omitempty"`
-	RotX float32 `json:"RotX,omitempty"`
-	RotY float32 `json:"RotY,omitempty"`
-	RotZ float32 `json:"RotZ,omitempty"`
+	Username string  `json:"Username,omitempty"`
+	PosX     float32 `json:"PosX,omitempty"`
+	PosY     float32 `json:"PosY,omitempty"`
+	PosZ     float32 `json:"PosZ,omitempty"`
+	RotX     float32 `json:"RotX,omitempty"`
+	RotY     float32 `json:"RotY,omitempty"`
+	RotZ     float32 `json:"RotZ,omitempty"`
 	// Voice Packets
 	IsP2P bool   `json:"IsP2P,omitempty"`
 	Data  []byte `json:"Data,omitempty"`
@@ -92,7 +92,7 @@ func (s Subscription) readPump() {
 		cm := ClientMessage{}
 		json.Unmarshal(message, &cm)
 		cm.Token = s.client.token
-		cm.Username = s.client.username
+		// cm.Username = s.client.username
 		cm.IsServer = s.client.isServer
 
 		bytes, _ := json.Marshal(&cm)
