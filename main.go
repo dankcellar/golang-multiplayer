@@ -19,7 +19,7 @@ func main() {
 
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"message": "Dank Cellar Studio was here",
+			"message": "Server is alive!!!",
 		})
 	})
 
