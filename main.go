@@ -17,6 +17,12 @@ func main() {
 	router := gin.New()
 	router.LoadHTMLGlob("public/*.html")
 
+	router.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "Dank Cellar Studio was here",
+		})
+	})
+
 	router.GET("/room/:roomID", func(c *gin.Context) {
 		c.HTML(200, "index.html", nil)
 	})
