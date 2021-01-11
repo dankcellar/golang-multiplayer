@@ -23,19 +23,19 @@ func main() {
 		})
 	})
 
-	router.GET("/room/:roomID", func(c *gin.Context) {
+	router.GET("/room/:id", func(c *gin.Context) {
 		c.HTML(200, "index.html", nil)
 	})
 
-	router.GET("/ws/:roomID", func(c *gin.Context) {
-		roomID := c.Param("roomID")
-		ipAdds := c.ClientIP()
+	router.GET("/ws/:id", func(c *gin.Context) {
+		room := c.Param("id")
+		ipAddr := c.ClientIP()
 		h := hmac.New(sha256.New, []byte(secret))
-		h.Write([]byte(ipAdds))
+		h.Write([]byte(ipAddr))
 		userToken := hex.EncodeToString(h.Sum(nil))
 		// userToken := guuid.New().String()
 
-		serveWs(hub, c.Writer, c.Request, roomID, userToken)
+		serveWs(hub, c.Writer, c.Request, room, userToken)
 	})
 
 	port := os.Getenv("PORT")

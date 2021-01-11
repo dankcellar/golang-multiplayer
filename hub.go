@@ -13,9 +13,9 @@ type Subscription struct {
 }
 
 type ServerMessage struct {
-	Token    string `json:"Token"`
-	IsServer bool   `json:"IsServer"`
-	// Username string `json:"Username"`
+	token    string `json:"Token"`
+	isServer bool   `json:"IsServer"`
+	username string `json:"Username"`
 }
 
 type Hub struct {
@@ -48,11 +48,11 @@ func (h *Hub) run() {
 			h.rooms[s.room][s.client] = true
 
 			s.client.isServer = isServer
-			// s.client.username = "PLACEHOLDER" // TODO: Get username from database
+			s.client.username = "PLACEHOLDER" // TODO: Get username from database
 			message := ServerMessage{
-				Token: s.client.token,
-				// Username: s.client.username,
-				IsServer: s.client.isServer,
+				token:    s.client.token,
+				username: s.client.username,
+				isServer: s.client.isServer,
 			}
 			bytes, _ := json.Marshal(&message)
 			s.client.send <- bytes
@@ -89,6 +89,7 @@ func (h *Hub) run() {
 						delete(h.rooms, m.room)
 					}
 				} else {
+					// Send if token is destination / send all if not senders token and no destination / send sender is server and
 					if (m.dest == c.token) || (m.dest == "" && m.token != c.token) || (c.isServer && m.token == c.token) {
 						c.send <- m.data
 					}
