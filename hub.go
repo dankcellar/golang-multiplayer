@@ -13,9 +13,9 @@ type Subscription struct {
 }
 
 type ServerMessage struct {
-	token    string `json:"Token"`
-	isServer bool   `json:"IsServer"`
-	username string `json:"Username"`
+	token    string
+	isServer bool
+	username string
 }
 
 type Hub struct {
