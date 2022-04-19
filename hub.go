@@ -1,36 +1,30 @@
 package main
 
-type Message struct {
-	data  []byte
-	room  string
-	token string
-	dest  string
-}
-
 type Subscription struct {
 	client *Client
 	room   string
 }
 
 type ServerMessage struct {
-	token    string
+	player   string
 	isServer bool
-	username string
+	data     []byte
+	room     string
 }
 
 type Hub struct {
-	rooms      map[string]map[*Client]bool
-	broadcast  chan Message
+	rooms      map[string]map[*Client]string
+	broadcast  chan ServerMessage
 	register   chan Subscription
 	unregister chan Subscription
 }
 
 func newHub() *Hub {
 	return &Hub{
-		broadcast:  make(chan Message),
+		broadcast:  make(chan ServerMessage),
 		register:   make(chan Subscription),
 		unregister: make(chan Subscription),
-		rooms:      make(map[string]map[*Client]bool),
+		rooms:      make(map[string]map[*Client]string),
 	}
 }
 
@@ -38,21 +32,21 @@ func (h *Hub) run() {
 	for {
 		select {
 		case s := <-h.register:
-			isServer := false
+			// isServer := false
 			connections := h.rooms[s.room]
 			if connections == nil {
-				connections = make(map[*Client]bool)
+				connections = make(map[*Client]string)
 				h.rooms[s.room] = connections
-				isServer = true
+				// isServer = true
 			}
-			h.rooms[s.room][s.client] = true
+			h.rooms[s.room][s.client] = s.client.secret
 
-			s.client.isServer = isServer
-			s.client.username = "PLACEHOLDER" // TODO: Get username from database
+			// s.client.isServer = isServer
 			message := ServerMessage{
-				token:    s.client.token,
-				username: s.client.username,
-				isServer: s.client.isServer,
+				player:   s.client.secret,
+				isServer: true,
+				room:     s.room,
+				data:     nil, // some server data like len(connections)
 			}
 			bytes, _ := json.Marshal(&message)
 			s.client.send <- bytes
@@ -72,29 +66,42 @@ func (h *Hub) run() {
 		case m := <-h.broadcast:
 			connections := h.rooms[m.room]
 			for c := range connections {
-				// select {
-				// case c.send <- m.data:
-				// default:
-				// 	close(c.send)
-				// 	delete(connections, c)
-				// 	if len(connections) == 0 {
-				// 		delete(h.rooms, m.room)
-				// 	}
-				// }
-
-				if len(c.send) == cap(c.send) {
+				select {
+				case c.send <- m.data:
+				default:
 					close(c.send)
 					delete(connections, c)
 					if len(connections) == 0 {
 						delete(h.rooms, m.room)
-					}
-				} else {
-					// Send if token is destination / send all if not senders token and no destination / send sender is server and
-					if (m.dest == c.token) || (m.dest == "" && m.token != c.token) || (c.isServer && m.token == c.token) {
-						c.send <- m.data
 					}
 				}
 			}
 		}
 	}
 }
+
+// func authToken(conn *websocket.Conn, room, token string) bool {
+// 	if _, ok := Member[room][conn]; ok {
+// 		if token == Member[room][conn]["token"] {
+// 			return true
+// 		}
+// 		return false
+// 	}
+// 	return false
+// }
+
+// func getMemberList(room string) []map[string]interface{} {
+// 	var list []map[string]interface{}
+// 	log.Println("cur - before: ", Member[room])
+// 	for key, _ := range Member[room] {
+// 		cur := Member[room][key]
+// 		log.Println("cur: ", cur)
+// 		if cur["name"] != nil {
+// 			list = append(list, map[string]interface{}{
+// 				"token": cur["count"],
+// 				"name":  cur["name"],
+// 			})
+// 		}
+// 	}
+// 	return list
+// }
