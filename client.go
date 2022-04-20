@@ -137,8 +137,8 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request, room string, toke
 		return
 	}
 
-	auth := uuid.Must(uuid.NewV4()).String()
-	c := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), token: auth}
+	secret := uuid.Must(uuid.NewV4()).String()
+	c := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), secret: secret}
 	s := Subscription{c, room}
 	c.hub.register <- s
 
