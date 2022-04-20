@@ -1,1 +1,1 @@
-web: bin/golang-multiplayer
+web: bin/go-chat
