@@ -1,4 +1,4 @@
-module go-chat
+module golang-multiplayer
 
 go 1.18
 
