@@ -94,12 +94,8 @@ limitations under the License.
         var params = window.location.href.split('/');
         var roomId = params[params.length - 1];
         var webSocketUri =
-          scheme +
-          window.location.hostname +
-          (location.port ? ':' + location.port : '') +
-          // + '127.0.0.1:8080'
-          '/room/' +
-          roomId;
+          scheme + window.location.hostname + (location.port ? ':' + location.port : '') + '/room/' + roomId;
+        // var webSocketUri = 'https://the-server-j2c4s.ondigitalocean.app/chat/123';
 
         /* Helper to keep an activity log on the page. */
         function log(text, label) {
@@ -142,7 +138,7 @@ limitations under the License.
           e.preventDefault();
           var data = $('#chat-text').val();
           if (data) {
-            websocket.send(data);
+            websocket.send({ data: data });
             window.scrollTo(0, document.body.scrollHeight);
             $('#chat-text').val('');
           }
