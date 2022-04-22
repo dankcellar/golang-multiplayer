@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -69,7 +68,6 @@ func (s Subscription) readPump() {
 
 		var cm ClientMessage
 		json.Unmarshal(message, &cm)
-		fmt.Println(string(cm.Data))
 		m := ServerMessage{s.Client.Secret, false, cm.Data, s.Room}
 		s.Client.Hub.Broadcast <- m
 	}
