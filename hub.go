@@ -8,9 +8,9 @@ type Subscription struct {
 }
 
 type ServerMessage struct {
-	Player   string `json:"player"`
 	IsServer bool   `json:"isServer"`
-	Data     []byte `json:"data"`
+	Player   string `json:"player"`
+	Data     string `json:"data"`
 	Room     string `json:"room"`
 }
 
@@ -48,7 +48,7 @@ func (h *Hub) run() {
 				Player:   s.Client.Secret,
 				IsServer: true,
 				Room:     s.Room,
-				Data:     []byte("{}"),
+				Data:     "{}",
 			}
 			data, _ := json.Marshal(m)
 			s.Client.Send <- data

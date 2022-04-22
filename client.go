@@ -39,10 +39,10 @@ type Client struct {
 }
 
 // ClientMessage takes incoming json``
-type ClientMessage struct {
-	Event int    `json:"event"`
-	Data  []byte `json:"data"`
-}
+// type ClientMessage struct {
+// 	Event int    `json:"event"`
+// 	Data  []byte `json:"data"`
+// }
 
 // readPump pumps messages from the websocket connection to the hub.
 //
@@ -66,10 +66,10 @@ func (s Subscription) readPump() {
 			break
 		}
 
-		var cm ClientMessage
-		json.Unmarshal(message, &cm)
-		m := ServerMessage{s.Client.Secret, false, cm.Data, s.Room}
-		s.Client.Hub.Broadcast <- m
+		if json.Valid(message) {
+			m := ServerMessage{false, s.Client.Secret, string(message), s.Room}
+			s.Client.Hub.Broadcast <- m
+		}
 	}
 }
 

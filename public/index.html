@@ -101,30 +101,16 @@ limitations under the License.
         function log(event, label) {
           var text = event.data;
           console.log(text);
-          if (!text) {
-            $('#messages').append(`<li> <strong>${label}</strong>`);
-          } else if (
-            /^[\],:{}\s]*$/.test(
-              text
-                .replace(/\\["\\\/bfnrtu]/g, '@')
-                .replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']')
-                .replace(/(?:^|:|,)(?:\s*\[)+/g, ''),
-            )
-          ) {
-            const player = JSON.parse(text);
-            $('#messages').append(`<li> <strong>${label}</strong>: ${player ? player.Token : text}`);
-          } else {
-            $('#messages').append(`<li> <strong>${label}</strong>: ${text}`);
-          }
+          $('#messages').append(`<li> <strong>${label}</strong>: ${text}`);
         }
 
         /* Establish the WebSocket connection and register event handlers. */
         var websocket = new WebSocket(webSocketUri);
         websocket.onopen = function (e) {
-          log(null, 'Connected');
+          log(e, 'Connected');
         };
         websocket.onclose = function (e) {
-          log(null, 'Closed');
+          log(e, 'Closed');
         };
         websocket.onmessage = function (e) {
           log(e, 'Message');
@@ -137,7 +123,7 @@ limitations under the License.
           e.preventDefault();
           var data = $('#chat-text').val();
           if (data) {
-            websocket.send({ data: data });
+            websocket.send(JSON.stringify({ event: 1, data: data }));
             window.scrollTo(0, document.body.scrollHeight);
             $('#chat-text').val('');
           }
