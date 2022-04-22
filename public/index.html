@@ -98,11 +98,11 @@ limitations under the License.
         // var webSocketUri = 'https://the-server-j2c4s.ondigitalocean.app/chat/123';
 
         /* Helper to keep an activity log on the page. */
-        function log(text, label) {
-          label = label || 'Status';
+        function log(event, label) {
+          var text = event.data;
           console.log(text);
           if (!text) {
-            $('#messages').append(`<li> <strong>${label}</strong>: ${text}`);
+            $('#messages').append(`<li> <strong>${label}</strong>`);
           } else if (
             /^[\],:{}\s]*$/.test(
               text
@@ -120,18 +120,17 @@ limitations under the License.
 
         /* Establish the WebSocket connection and register event handlers. */
         var websocket = new WebSocket(webSocketUri);
-        websocket.onopen = function () {
+        websocket.onopen = function (e) {
           log(null, 'Connected');
         };
-        websocket.onclose = function () {
+        websocket.onclose = function (e) {
           log(null, 'Closed');
         };
         websocket.onmessage = function (e) {
-          log(e.data, 'Message received');
+          log(e, 'Message');
         };
         websocket.onerror = function (e) {
-          log(null, 'Error (see console)');
-          console.log(e);
+          log(e, 'Error (see console)');
         };
         /* Handle form submission and send a message to the websocket. */
         $('#chat-form').submit(function (e) {

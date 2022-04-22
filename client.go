@@ -1,16 +1,15 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/websocket"
-	jsoniter "github.com/json-iterator/go"
 )
-
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 const (
 	// Time allowed to write a message to the peer.
@@ -33,17 +32,17 @@ var upgrader = websocket.Upgrader{
 
 // Client is a middleman between the websocket connection and the hub.
 type Client struct {
-	hub    *Hub
-	conn   *websocket.Conn
-	send   chan []byte
-	secret string
-	// isServer bool
+	Hub    *Hub
+	Conn   *websocket.Conn
+	Send   chan []byte
+	Secret string
+	// IsServer bool
 }
 
 // ClientMessage takes incoming json``
 type ClientMessage struct {
-	event int32
-	data  string
+	Event int    `json:"event"`
+	Data  []byte `json:"data"`
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -53,14 +52,14 @@ type ClientMessage struct {
 // reads from this goroutine.
 func (s Subscription) readPump() {
 	defer func() {
-		s.client.hub.unregister <- s
-		s.client.conn.Close()
+		s.Client.Hub.Unregister <- s
+		s.Client.Conn.Close()
 	}()
-	s.client.conn.SetReadLimit(maxMessageSize)
-	s.client.conn.SetReadDeadline(time.Now().Add(pongWait))
-	s.client.conn.SetPongHandler(func(string) error { s.client.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+	s.Client.Conn.SetReadLimit(maxMessageSize)
+	s.Client.Conn.SetReadDeadline(time.Now().Add(pongWait))
+	s.Client.Conn.SetPongHandler(func(string) error { s.Client.Conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
-		_, message, err := s.client.conn.ReadMessage()
+		_, message, err := s.Client.Conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error: %v", err)
@@ -68,17 +67,11 @@ func (s Subscription) readPump() {
 			break
 		}
 
-		// TODO validate some data
-		cm := ClientMessage{}
+		var cm ClientMessage
 		json.Unmarshal(message, &cm)
-		if !json.Valid([]byte(cm.data)) {
-			cm.data = "{}"
-			cm.event = 0
-		}
-
-		bytes, _ := json.Marshal(&cm)
-		m := ServerMessage{s.client.secret, false, bytes, s.room}
-		s.client.hub.broadcast <- m
+		fmt.Println(string(cm.Data))
+		m := ServerMessage{s.Client.Secret, false, cm.Data, s.Room}
+		s.Client.Hub.Broadcast <- m
 	}
 }
 
@@ -91,29 +84,29 @@ func (s Subscription) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
-		s.client.conn.Close()
+		s.Client.Conn.Close()
 	}()
 	for {
 		select {
-		case message, ok := <-s.client.send:
-			s.client.conn.SetWriteDeadline(time.Now().Add(writeWait))
+		case message, ok := <-s.Client.Send:
+			s.Client.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				// The hub closed the channel.
-				s.client.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				s.Client.Conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 
-			w, err := s.client.conn.NextWriter(websocket.TextMessage)
+			w, err := s.Client.Conn.NextWriter(websocket.TextMessage)
 			if err != nil {
 				return
 			}
 			w.Write(message)
 
-			// // Add queued chat messages to the current websocket message.
-			// n := len(s.client.send)
+			// Add queued chat messages to the current websocket message.
+			// n := len(s.Client.Send)
 			// for i := 0; i < n; i++ {
 			// 	w.Write([]byte{' '})
-			// 	w.Write(<-s.client.send)
+			// 	w.Write(<-s.Client.Send)
 			// }
 
 			if err := w.Close(); err != nil {
@@ -121,8 +114,8 @@ func (s Subscription) writePump() {
 			}
 
 		case <-ticker.C:
-			s.client.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if err := s.client.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+			s.Client.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := s.Client.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
 			}
 		}
@@ -138,9 +131,9 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request, room string, toke
 	}
 
 	secret := uuid.Must(uuid.NewV4()).String()
-	c := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), secret: secret}
+	c := &Client{Hub: hub, Conn: conn, Send: make(chan []byte, 256), Secret: secret}
 	s := Subscription{c, room}
-	c.hub.register <- s
+	c.Hub.Register <- s
 
 	// Allow collection of memory referenced by the caller by doing all work in new goroutines.
 	go s.writePump()

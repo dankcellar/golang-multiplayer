@@ -1,78 +1,81 @@
 package main
 
+import "encoding/json"
+
 type Subscription struct {
-	client *Client
-	room   string
+	Client *Client
+	Room   string
 }
 
 type ServerMessage struct {
-	player   string
-	isServer bool
-	data     []byte
-	room     string
+	Player   string `json:"player"`
+	IsServer bool   `json:"isServer"`
+	Data     []byte `json:"data"`
+	Room     string `json:"room"`
 }
 
 type Hub struct {
-	rooms      map[string]map[*Client]string
-	broadcast  chan ServerMessage
-	register   chan Subscription
-	unregister chan Subscription
+	Rooms      map[string]map[*Client]string
+	Broadcast  chan ServerMessage
+	Register   chan Subscription
+	Unregister chan Subscription
 }
 
 func newHub() *Hub {
 	return &Hub{
-		broadcast:  make(chan ServerMessage),
-		register:   make(chan Subscription),
-		unregister: make(chan Subscription),
-		rooms:      make(map[string]map[*Client]string),
+		Broadcast:  make(chan ServerMessage),
+		Register:   make(chan Subscription),
+		Unregister: make(chan Subscription),
+		Rooms:      make(map[string]map[*Client]string),
 	}
 }
 
 func (h *Hub) run() {
 	for {
 		select {
-		case s := <-h.register:
+		case s := <-h.Register:
 			// isServer := false
-			connections := h.rooms[s.room]
+			connections := h.Rooms[s.Room]
 			if connections == nil {
 				connections = make(map[*Client]string)
-				h.rooms[s.room] = connections
+				h.Rooms[s.Room] = connections
 				// isServer = true
 			}
-			h.rooms[s.room][s.client] = s.client.secret
+			h.Rooms[s.Room][s.Client] = s.Client.Secret
 
-			// s.client.isServer = isServer
-			message := ServerMessage{
-				player:   s.client.secret,
-				isServer: true,
-				room:     s.room,
-				data:     nil, // some server data like len(connections)
+			// s.Client.IsServer = isServer
+			m := ServerMessage{
+				Player:   s.Client.Secret,
+				IsServer: true,
+				Room:     s.Room,
+				Data:     []byte("{}"),
 			}
-			bytes, _ := json.Marshal(&message)
-			s.client.send <- bytes
+			data, _ := json.Marshal(m)
+			s.Client.Send <- data
 
-		case s := <-h.unregister:
-			connections := h.rooms[s.room]
+		case s := <-h.Unregister:
+			connections := h.Rooms[s.Room]
 			if connections != nil {
-				if _, ok := connections[s.client]; ok {
-					close(s.client.send)
-					delete(connections, s.client)
+				if _, ok := connections[s.Client]; ok {
+					close(s.Client.Send)
+					delete(connections, s.Client)
 					if len(connections) == 0 {
-						delete(h.rooms, s.room)
+						delete(h.Rooms, s.Room)
 					}
 				}
 			}
 
-		case m := <-h.broadcast:
-			connections := h.rooms[m.room]
+		case m := <-h.Broadcast:
+			data, _ := json.Marshal(m)
+			connections := h.Rooms[m.Room]
 			for c := range connections {
 				select {
-				case c.send <- m.data:
+				case c.Send <- data:
 				default:
-					close(c.send)
+					close(c.Send)
 					delete(connections, c)
 					if len(connections) == 0 {
-						delete(h.rooms, m.room)
+						delete(h.Rooms, m.Room)
 					}
 				}
 			}
